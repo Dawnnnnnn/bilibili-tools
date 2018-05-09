@@ -87,7 +87,7 @@ class judge(login):
                 print("cookie失效,尝试重新登录!")
                 self.login()
                 self.judge()
-            if temp['code'] == 25014:
+            if temp['code'] == 25014 or 25008:
                 print("今日的案件已经审理完毕了噢~,休眠六小时后会再次开始审理")
                 time.sleep(21600)
                 self.judge()
@@ -108,8 +108,10 @@ class judge(login):
             url = "https://api.bilibili.com/x/credit/jury/juryCase?jsonp=jsonp&callback=jQuery1720" + str(
                 self.randomint()) + "_" + self.CurrentTime() + "&cid=" + str(id) + "&_=" + self.CurrentTime()
             response = requests.get(url, headers=headers)
+            print(response.text)
             temp = (response.text[42:-1])
             temp = json.loads(temp)
+            print(temp)
             votebreak = temp['data']['voteBreak']
             voteDelete = temp['data']['voteDelete']
             voteRule = temp['data']['voteRule']
@@ -122,6 +124,7 @@ class judge(login):
             return id, vote
         except:
             print("check模块出错")
+            self.judge()
 
     def judge(self):
         id, vote = self.check()
