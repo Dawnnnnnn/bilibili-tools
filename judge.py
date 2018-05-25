@@ -51,19 +51,22 @@ class login():
         headers = {"Content-type": "application/x-www-form-urlencoded"}
         payload = temp_params + "&sign=" + sign
         response = requests.post(url, data=payload, headers=headers)
-        cookie = (response.json()['data']['cookie_info']['cookies'])
-        cookie_format = ""
-        for i in range(0, len(cookie)):
-            cookie_format = cookie_format + cookie[i]['name'] + "=" + cookie[i]['value'] + ";"
-        s1 = re.findall(r'bili_jct=(\S+)', cookie_format, re.M)
-        self.cookies = cookie_format
-        self.headers = {
-            "Host": "api.bilibili.com",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
-            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-            "Cookie": self.cookies
-        }
-        self.csrf = (s1[0]).split(";")[0]
+        try:
+            cookie = (response.json()['data']['cookie_info']['cookies'])
+            cookie_format = ""
+            for i in range(0, len(cookie)):
+                cookie_format = cookie_format + cookie[i]['name'] + "=" + cookie[i]['value'] + ";"
+            s1 = re.findall(r'bili_jct=(\S+)', cookie_format, re.M)
+            self.cookies = cookie_format
+            self.headers = {
+                "Host": "api.bilibili.com",
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
+                "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+                "Cookie": self.cookies
+            }
+            self.csrf = (s1[0]).split(";")[0]
+        except:
+            print("登录失败，回显为:",response.json())
 
 class judge(login):
 
@@ -93,6 +96,7 @@ class judge(login):
                 self.judge()
         except:
             print("caseObtain模块出错")
+            self.judge()
 
     def check(self):
         vote = 4
@@ -124,28 +128,35 @@ class judge(login):
             return id, vote
         except:
             print("check模块出错")
+            time.sleep(120)
             self.judge()
 
     def judge(self):
-        id, vote = self.check()
-        url = 'http://api.bilibili.com/x/credit/jury/vote'
-        payload = {
-            "jsonp": "jsonp",
-            "cid": id,
-            "vote": vote,
-            "content": "",
-            "likes": "",
-            "hates": "",
-            "attr": "1",
-            "csrf": self.csrf
-        }
-        response = requests.post(url, headers=self.headers, data=payload)
-        print(response.json())
+        try:
+            id, vote = self.check()
+            url = 'http://api.bilibili.com/x/credit/jury/vote'
+            payload = {
+                "jsonp": "jsonp",
+                "cid": id,
+                "vote": vote,
+                "content": "",
+                "likes": "",
+                "hates": "",
+                "attr": "1",
+                "csrf": self.csrf
+                }
+            response = requests.post(url, headers=self.headers, data=payload)
+            print(response.json())
+        except:
+            print('judge出错')
 
     def run(self):
         self.login()
         while 1:
-            self.judge()
-            time.sleep(random.randint(12,43))
+            try:
+                self.judge()
+                time.sleep(random.randint(12,43))
+            except:
+                print('run出错')
 
 judge().run()
