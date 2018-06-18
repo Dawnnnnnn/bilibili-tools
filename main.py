@@ -17,7 +17,7 @@ def CurrentTime():
 
 class login():
     cookies = ""
-    username = input("账号:")
+    username = input("用户名:")
     password = input("密码:")
     headers = {
         "Host": "api.bilibili.com",
@@ -260,37 +260,6 @@ class judge(login):
         response = requests.post(url1,headers=headers,data=data)
         print("分享视频:",response.json())
 
-        url2 = "https://api.bilibili.com/x/report/heartbeat"
-        cid = await self.get_cid(aid)
-        ts1 = CurrentTime()
-        temp_params1 = "aid="+str(aid)+"&appkey=1d8b6e7d45233436&build=5260003&cid="+str(cid)+"&epid=0&from=7&mid="+str(login.uid)+"&mobi_app=android&platform=android&play_type=4&played_time=0&sid=0&start_ts=0&sub_type=0&ts="+ts1+"&type=3"
-        sign1 = await self.calc_sign(temp_params1)
-        data2 = {
-            "aid":aid,
-            "appkey":"1d8b6e7d45233436",
-            "build":"5260003",
-            "cid":cid,
-            "epid":"0",
-            "from":"7",
-            "mid":login.uid,
-            "mobi_app":"android",
-            "platform":"android",
-            "play_type":"4",
-            "played_time":"0",
-            "sid":"0",
-            "start_ts":"0",
-            "sub_type":"0",
-            "ts":ts1,
-            "type":"3",
-            "sign":sign1
-        }
-        headers = {
-            "User-Agent": "Mozilla/5.0 BiliDroid/5.26.3 (bbcallen@gmail.com)",
-            "Host": "api.bilibili.com",
-            "Cookie": "sid=8wfvu7i7"
-        }
-        response = requests.post(url2,headers=headers,data=data2)
-        print("分享视频(模拟):",response.json())
 
     async def watch_av(self,aid,cid):
         url = "https://api.bilibili.com/x/report/web/heartbeat"
@@ -314,7 +283,8 @@ class judge(login):
         }
 
         response = requests.post(url,headers=headers,data=data)
-        print("观看视频:",response.json())
+
+        print("watch_Av_state:",response.text)
 
     async def judge_run(self):
         while 1:
@@ -369,10 +339,10 @@ loop.run_until_complete(asyncio.wait(tasks1))
 loop2 = asyncio.get_event_loop()
 
 tasks2 = [
-    #judge().coin_run(),   # 投币任务
-    judge().share_run(),  # 分享任务
-    judge().watch_run(),  # 观看任务
-    judge().judge_run()   # 仲裁案件
+    judge().coin_run(),
+    judge().share_run(),
+    judge().watch_run(),
+    judge().judge_run()
 
 ]
 loop.run_until_complete(asyncio.wait(tasks2))
