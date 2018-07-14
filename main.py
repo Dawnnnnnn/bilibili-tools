@@ -222,10 +222,10 @@ class judge(login):
             "Cookie": login.cookies
         }
         response = requests.post(url, data=data, headers=headers)
-        print("投币:",response.json())
+        print("coin_task:",response.text)
 
         if response.json()['code'] != 0:
-            self.givecoin()
+            await self.givecoin()
         await asyncio.sleep(10)
 
     async def get_cid(self,aid):
@@ -295,18 +295,19 @@ class judge(login):
                 print('judge_run出错')
 
     async def coin_run(self):
-        try:
-            i = await self.query_reward()
-            coin_exp = i[3]
-            while coin_exp < 50:
-                await self.givecoin()
-                coin_exp = coin_exp + 10
-            if coin_exp == 50:
-                print("投币任务完成")
-                await asyncio.sleep(86400)
-                await self.coin_run()
-        except:
-            print("coin_run出错")
+        while 1:
+            try:
+                i = await self.query_reward()
+                coin_exp = i[3]
+                while coin_exp < 50:
+                    await self.givecoin()
+                    coin_exp = coin_exp + 10
+                if coin_exp == 50:
+                    print("投币任务完成")
+                    await asyncio.sleep(86400)
+                    await self.coin_run()
+            except:
+                print("coin_run出错")
 
     async def share_run(self):
         while 1:
