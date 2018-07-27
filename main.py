@@ -17,8 +17,8 @@ def CurrentTime():
 
 class login():
     cookies = ""
-    username = input("用户名:")
-    password = input("密码:")
+    username = input("输入用户名:")
+    password = input("输入密码:")
     headers = {
         "Host": "api.bilibili.com",
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
@@ -92,7 +92,8 @@ class judge(login):
     async def caseObtain(self):
         try:
             url = 'http://api.bilibili.com/x/credit/jury/caseObtain'
-            response = requests.post(url, headers=login.headers)
+            data = {'jsonp':'jsonp','csrf':login.csrf}
+            response = requests.post(url, headers=login.headers,data=data)
             temp = response.json()
             print(temp)
             if temp['code'] == 0:
