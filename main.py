@@ -9,6 +9,7 @@ import base64
 import re
 import datetime
 from urllib import parse
+from login import BiliLogin
 
 
 def CurrentTime():
@@ -53,35 +54,19 @@ class login():
         username = parse.quote_plus(username)
         return username, password
 
-    async def login(self):
-        url = "https://passport.bilibili.com/api/v2/oauth2/login"
-        user, pwd = await self.get_pwd(login.username, login.password)
-        temp_params = 'appkey=1d8b6e7d45233436&password=' + pwd + '&username=' + user
-        sign = await self.calc_sign(temp_params)
-        headers = {"Content-type": "application/x-www-form-urlencoded"}
-        payload = temp_params + "&sign=" + sign
-        response = requests.post(url, data=payload, headers=headers)
-        try:
-            cookie = (response.json()['data']['cookie_info']['cookies'])
-            cookie_format = ""
-            for i in range(0, len(cookie)):
-                cookie_format = cookie_format + \
-                    cookie[i]['name'] + "=" + cookie[i]['value'] + ";"
-            s1 = re.findall(r'bili_jct=(\S+)', cookie_format, re.M)
-            s2 = re.findall(r'DedeUserID=(\S+)', cookie_format, re.M)
-            login.cookies = cookie_format
-            login.headers = {
-                "Host": "api.bilibili.com",
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
-                "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-                "Cookie": login.cookies
-            }
-            login.csrf = (s1[0]).split(";")[0]
-            login.uid = (s2[0].split(";")[0])
-            login.access_key = response.json(
-            )['data']['token_info']['access_token']
-        except:
-            print("登录失败，回显为:", response.json())
+    def login(self):
+        name, login.cookies, login.access_key = BiliLogin().login(login.username, login.password)
+
+        s1 = re.findall(r'bili_jct=(\S+)', login.cookies, re.M)
+        s2 = re.findall(r'DedeUserID=(\S+)', login.cookies, re.M)
+        login.headers = {
+            "Host": "api.bilibili.com",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
+            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+            "Cookie": login.cookies
+        }
+        login.csrf = (s1[0]).split(";")[0]
+        login.uid = (s2[0].split(";")[0])
 
 
 class judge(login):
@@ -110,7 +95,7 @@ class judge(login):
     async def get_attention(self):
         top50_attention_list = []
         url = "https://api.bilibili.com/x/relation/followings?vmid=" + \
-            str(login.uid) + "&ps=50&order=desc"
+              str(login.uid) + "&ps=50&order=desc"
         headers = {
             "Host": "api.bilibili.com",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
@@ -129,7 +114,7 @@ class judge(login):
         video_list = []
         for mid in top50_attention_list:
             url = "https://space.bilibili.com/ajax/member/getSubmitVideos?mid=" + \
-                str(mid) + "&pagesize=100&tid=0"
+                  str(mid) + "&pagesize=100&tid=0"
             response = requests.get(url)
             datalen = len(response.json()['data']['vlist'])
             for i in range(0, datalen):
@@ -162,7 +147,7 @@ class judge(login):
         await asyncio.sleep(10)
 
     async def get_cid(self, aid):
-        url = "https://www.bilibili.com/widget/getPageList?aid="+str(aid)
+        url = "https://www.bilibili.com/widget/getPageList?aid=" + str(aid)
         response = requests.get(url)
         cid = response.json()[0]['cid']
         return cid
@@ -177,8 +162,10 @@ class judge(login):
             "Cookie": "sid=8wfvu7i7"
         }
         ts = CurrentTime()
-        temp_params = "access_key="+login.access_key+"&aid=" + \
-            str(aid)+"&appkey=1d8b6e7d45233436&build=5260003&from=7&mobi_app=android&platform=android&ts="+str(ts)
+        temp_params = "access_key=" + login.access_key + "&aid=" + \
+                      str(
+                          aid) + "&appkey=1d8b6e7d45233436&build=5260003&from=7&mobi_app=android&platform=android&ts=" + str(
+            ts)
         sign = await self.calc_sign(temp_params)
         data = {
             "access_key": login.access_key,
@@ -199,7 +186,7 @@ class judge(login):
         headers = {
             "Host": "api.bilibili.com",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36",
-            "Referer": "https://www.bilibili.com/video/av"+str(aid),
+            "Referer": "https://www.bilibili.com/video/av" + str(aid),
             "Cookie": login.cookies
         }
         data = {
@@ -255,13 +242,9 @@ class judge(login):
                 print("watch_run出错")
 
 
-loop = asyncio.get_event_loop()
-tasks1 = [
-    judge().login()
-]
-loop.run_until_complete(asyncio.wait(tasks1))
+judge().login()
 
-loop2 = asyncio.get_event_loop()
+loop = asyncio.get_event_loop()
 
 tasks2 = [
     judge().coin_run(),
